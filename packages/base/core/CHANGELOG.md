@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* `isReady` method on `Collection` to wait for the collection to be ready
+
 ### Changed
 
 * Don't load developer tools automatically in production

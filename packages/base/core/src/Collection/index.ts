@@ -204,6 +204,7 @@ export default class Collection<
   private isDisposed = false
   private postBatchCallbacks = new Set<() => void>()
   private fieldTracking = false
+  private persistenceReadyPromise: Promise<void>
 
   /**
    * Initializes a new instance of the `Collection` class with optional configuration.
@@ -391,6 +392,12 @@ export default class Collection<
           this.emit('persistence.error', error instanceof Error ? error : new Error(error as string))
         })
     }
+    this.persistenceReadyPromise = new Promise<void>((resolve, reject) => {
+      if (!this.persistenceAdapter) return resolve()
+      this.once('persistence.init', resolve)
+      this.once('persistence.error', reject)
+    })
+
     Collection.onCreationCallbacks.forEach(callback => callback(this))
   }
 
@@ -449,6 +456,23 @@ export default class Collection<
    */
   public setFieldTracking(enable: boolean) {
     this.fieldTracking = enable
+  }
+
+  /**
+   * Resolves when the persistence adapter finished initializing
+   * and the collection is ready to be used.
+   * @returns A promise that resolves when the collection is ready.
+   * @example
+   * ```ts
+   * const collection = new Collection({
+   *   persistence: // ...
+   * })
+   * await collection.isReady()
+   *
+   * collection.insert({ name: 'Item 1' })
+   */
+  public async isReady() {
+    return this.persistenceReadyPromise
   }
 
   private profile<ReturnValue>(
@@ -516,9 +540,10 @@ export default class Collection<
       ? indexInfo.positions.map(index => memory[index])
       : memory
     const item = items.find(document => match(document, selector))
-    const index = (indexInfo.matched
-      && indexInfo.positions.find(itemIndex => memory[itemIndex] === item))
-        || memory.findIndex(document => document === item)
+    const foundInIndex = indexInfo.matched
+      && indexInfo.positions.find(itemIndex => memory[itemIndex] === item)
+    const index = foundInIndex
+      || memory.findIndex(document => document === item)
     if (item == null) return { item: null, index: -1 }
     if (index === -1) throw new Error('Cannot resolve index for item')
     return { item, index }
