@@ -4,6 +4,7 @@ import type {
   ReactivityAdapter,
   Changeset,
   LoadResponse,
+  Selector,
 } from '@signaldb/core'
 import { Collection, randomId, isEqual } from '@signaldb/core'
 import debounce from './utils/debounce'
@@ -316,6 +317,15 @@ export default class SyncManager<
   }
 
   /**
+   * Setup all collections to be synced with remote changes
+   * and enable automatic pushing changes to the remote source.
+   */
+  public async startAll() {
+    await Promise.all([...this.collections.keys()].map(id =>
+      this.startSync(id)))
+  }
+
+  /**
    * Setup a collection to be synced with remote changes
    * and enable automatic pushing changes to the remote source.
    * @param name Name of the collection
@@ -375,6 +385,16 @@ export default class SyncManager<
       syncPaused: false,
       cleanupFunction,
     })
+  }
+
+  /**
+   * Pauses the sync process for all collections.
+   * This means that the collections will not be synced with remote changes
+   * and changes will not automatically be pushed to the remote source.
+   */
+  public async pauseAll() {
+    await Promise.all([...this.collections.keys()].map(id =>
+      this.pauseSync(id)))
   }
 
   /**
@@ -528,7 +548,9 @@ export default class SyncManager<
     const syncTime = Date.now()
 
     const lastFinishedSync = this.syncOperations.findOne({ collectionName: name, status: 'done' }, { sort: { end: -1 } })
-    const lastSnapshot = this.snapshots.findOne({ collectionName: name }, { sort: { time: -1 } })
+    const lastSnapshot = this.snapshots.findOne({
+      collectionName: name,
+    } as Selector<Snapshot<any>>, { sort: { time: -1 } })
     const currentChanges = this.changes.find({
       collectionName: name,
       $and: [
@@ -546,7 +568,7 @@ export default class SyncManager<
       }),
       push: changes => this.options.push(collectionOptions, { changes }),
       insert: (item) => {
-        if (item.id && !!collection.findOne({ id: item.id })) {
+        if (item.id && !!collection.findOne({ id: item.id } as Selector<any>)) {
           this.remoteChanges.push({
             collectionName: name,
             type: 'update',
@@ -554,7 +576,7 @@ export default class SyncManager<
           })
 
           // update the item if it already exists
-          collection.updateOne({ id: item.id }, { $set: item })
+          collection.updateOne({ id: item.id } as Selector<any>, { $set: item })
           return
         }
         this.remoteChanges.push({
@@ -565,7 +587,7 @@ export default class SyncManager<
         collection.insert(item)
       },
       update: (itemId, modifier) => {
-        if (itemId && !collection.findOne({ id: itemId })) {
+        if (itemId && !collection.findOne({ id: itemId } as Selector<any>)) {
           const item = { ...modifier.$set as ItemType, id: itemId }
           this.remoteChanges.push({
             collectionName: name,
@@ -582,16 +604,16 @@ export default class SyncManager<
           type: 'update',
           data: { id: itemId, modifier },
         })
-        collection.updateOne({ id: itemId } as Record<string, any>, modifier)
+        collection.updateOne({ id: itemId } as Selector<any>, modifier)
       },
       remove: (itemId) => {
-        if (!collection.findOne({ id: itemId } as Record<string, any>)) return
+        if (!collection.findOne({ id: itemId } as Selector<any>)) return
         this.remoteChanges.push({
           collectionName: name,
           type: 'remove',
           data: itemId,
         })
-        collection.removeOne({ id: itemId } as Record<string, any>)
+        collection.removeOne({ id: itemId } as Selector<any>)
       },
       batch: (fn) => {
         collection.batch(() => {
@@ -601,7 +623,10 @@ export default class SyncManager<
     })
       .then(async (snapshot) => {
         // clean up old snapshots
-        this.snapshots.removeMany({ collectionName: name, time: { $lte: syncTime } })
+        this.snapshots.removeMany({
+          collectionName: name,
+          time: { $lte: syncTime },
+        } as Selector<any>)
 
         // clean up processed changes
         this.changes.removeMany({
@@ -640,13 +665,13 @@ export default class SyncManager<
 
         // find all items that are not in the snapshot
         const nonExistingItemIds = collection.find({
-          id: { $nin: snapshot.map(item => item.id) } as any,
-        }).map(item => item.id) as IdType[]
+          id: { $nin: snapshot.map(item => item.id) },
+        } as Selector<any>).map(item => item.id) as IdType[]
 
         collection.batch(() => {
           // update all items that are in the snapshot
           snapshot.forEach((item) => {
-            const itemExists = !!collection.findOne({ id: item.id as any })
+            const itemExists = !!collection.findOne({ id: item.id } as Selector<any>)
             /* istanbul ignore else -- @preserve */
             if (itemExists) {
               this.remoteChanges.push({
@@ -654,7 +679,7 @@ export default class SyncManager<
                 type: 'update',
                 data: { id: item.id, modifier: { $set: item } },
               })
-              collection.updateOne({ id: item.id as any }, { $set: item })
+              collection.updateOne({ id: item.id } as Selector<any>, { $set: item })
             } else { // this case should never happen
               this.remoteChanges.push({
                 collectionName: name,
@@ -667,7 +692,7 @@ export default class SyncManager<
 
           // remove all items that are not in the snapshot
           nonExistingItemIds.forEach((id) => {
-            collection.removeOne({ id: id as any })
+            collection.removeOne({ id } as Selector<any>)
           })
         })
       })

@@ -31,7 +31,7 @@ export default withMermaid({
         items: [
           {
             text: 'Changelog',
-            link: 'https://github.com/maxnowack/signaldb/blob/main/CHANGELOG.md',
+            link: '/changelog/core/',
           },
           {
             text: 'Contributing',
@@ -58,8 +58,35 @@ export default withMermaid({
             { text: 'Data Persistence', link: '/data-persistence/' },
             { text: 'Reactivity', link: '/reactivity/' },
             { text: 'Synchronization', link: '/sync/' },
+            { text: 'ORM', link: '/orm/' },
             { text: 'Developer Tools', link: '/devtools/' },
             { text: 'Upgrade to v1', link: '/upgrade/v1/' },
+          ],
+        },
+        {
+          text: 'Changelog',
+          collapsed: true,
+          items: [
+            { text: '@signaldb/core', link: '/changelog/core/' },
+            { text: '@signaldb/sync', link: '/changelog/sync/' },
+            { text: '@signaldb/devtools', link: '/changelog/devtools/' },
+            { text: '@signaldb/react', link: '/changelog/react/' },
+            { text: '@signaldb/fs', link: '/changelog/fs/' },
+            { text: '@signaldb/indexeddb', link: '/changelog/indexeddb/' },
+            { text: '@signaldb/localstorage', link: '/changelog/localstorage/' },
+            { text: '@signaldb/opfs', link: '/changelog/opfs/' },
+            { text: '@signaldb/angular', link: '/changelog/angular/' },
+            { text: '@signaldb/maverickjs', link: '/changelog/maverickjs/' },
+            { text: '@signaldb/meteor', link: '/changelog/meteor/' },
+            { text: '@signaldb/mobx', link: '/changelog/mobx/' },
+            { text: '@signaldb/oby', link: '/changelog/oby/' },
+            { text: '@signaldb/preact', link: '/changelog/preact/' },
+            { text: '@signaldb/reactively', link: '/changelog/reactively/' },
+            { text: '@signaldb/sinuous', link: '/changelog/sinuous/' },
+            { text: '@signaldb/sjs', link: '/changelog/sjs/' },
+            { text: '@signaldb/solid', link: '/changelog/solid/' },
+            { text: '@signaldb/usignal', link: '/changelog/usignal/' },
+            { text: '@signaldb/vue', link: '/changelog/vue/' },
           ],
         },
         {
@@ -115,7 +142,6 @@ export default withMermaid({
           items: [
             {
               text: '@signaldb/core',
-              link: '/reference/core/',
               collapsed: true,
               items: [
                 { text: 'Collection', link: '/reference/core/collection/' },
@@ -260,6 +286,7 @@ export default withMermaid({
       '/reactivity/oby.html': '/reference/oby/',
       '/reactivity/oby/index.html': '/reference/oby/',
       '/reactivity/other.html': '/reference/core/createreactivityadapter/',
+      '/reactivity/other/index.html': '/reactivity/',
       '/reactivity/preact-signals.html': '/reference/preact/',
       '/reactivity/preact-signals/index.html': '/reference/preact/',
       '/reactivity/preact/index.html': '/reference/preact/',
@@ -288,6 +315,7 @@ export default withMermaid({
       '/replication/supabase/index.html': '/sync/',
       '/sync/implementation': '/sync/',
       '/sync/reference/index.html': '/reference/sync/',
+      '/todo-example/index.html': '/examples/appwrite/',
       '/troubleshooting.html': '/troubleshooting/',
     }
 

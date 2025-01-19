@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Enabled type checking in query selectors
+
+## [1.2.0] - 2025-01-13
+
+### Added
+
 * `isReady` method on `Collection` to wait for the collection to be ready
 
 ### Changed
 
-* Don't load developer tools automatically in production
+* Don't load developer tools automatically in production (thanks @lorof)
 
 ## [1.1.0] - 2025-01-10
 
