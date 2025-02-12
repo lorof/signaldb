@@ -24,7 +24,7 @@ export default withMermaid({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Get Started', link: '/getting-started/' },
+      { text: 'Documentation', link: '/getting-started/' },
       { text: 'Reference', link: '/reference/' },
       {
         text: package_.version,
@@ -145,6 +145,7 @@ export default withMermaid({
               collapsed: true,
               items: [
                 { text: 'Collection', link: '/reference/core/collection/' },
+                { text: 'Cursor', link: '/reference/core/cursor/' },
                 { text: 'AutoFetchCollection', link: '/reference/core/autofetchcollection/' },
                 { text: 'createIndex', link: '/reference/core/createindex/' },
                 { text: 'createIndexProvider', link: '/reference/core/createindexprovider/' },

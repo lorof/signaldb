@@ -12,6 +12,8 @@ Please move @signaldb/devtools to development dependencies to disable it in prod
 
 `
 
+const packageName = '@signaldb/devtools'
+
 /**
  * A small helper type for Node errors, allowing us to check the `code` property.
  */
@@ -31,6 +33,20 @@ function isNodeErrorWithCode(error: unknown): error is NodeError {
     && 'code' in error
     && typeof (error as NodeError).code === 'string'
   )
+}
+
+/**
+ * Checks if a given error object represents a failed attempt to import dev tools.
+ * @param error - The error object to check.
+ * @returns A boolean indicating whether the error is recognized as a failed dev tools import.
+ */
+function isFailedDevToolsImportError(error: Error | NodeError): boolean {
+  if (isNodeErrorWithCode(error)) {
+    return error.code === 'MODULE_NOT_FOUND'
+  }
+  return error.name === 'TypeError'
+    && error.message.includes('Failed to resolve module specifier')
+    && error.message.includes(packageName)
 }
 
 /**
@@ -58,7 +74,7 @@ async function checkDevtoolsAvailability(): Promise<boolean> {
   // 1. If we have CommonJS, try `require.resolve`
   if (isCommonJS()) {
     try {
-      require.resolve('@signaldb/devtools')
+      require.resolve(packageName)
       return true
     } catch {
       return false
@@ -67,15 +83,10 @@ async function checkDevtoolsAvailability(): Promise<boolean> {
 
   // 2. If we are in a pure ESM environment, try dynamic import
   try {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await import('@signaldb/devtools')
+    await import(/* @vite-ignore */ packageName)
     return true
   } catch (error) {
-    // In some Node ESM cases, dynamic import might fail due to lack of the module.
-    // We'll attempt `createRequire` as a last resort if the error is specifically MODULE_NOT_FOUND.
-    if (!isNodeErrorWithCode(error) || error.code !== 'MODULE_NOT_FOUND') {
-      // It's some other error, so rethrow
+    if (!isFailedDevToolsImportError(error as Error)) {
       throw error
     }
   }
@@ -86,7 +97,7 @@ async function checkDevtoolsAvailability(): Promise<boolean> {
     const modulePackage = await import('module')
     const createRequireFunction = modulePackage.default.createRequire
     const cjsRequire = createRequireFunction(import.meta.url)
-    cjsRequire.resolve('@signaldb/devtools')
+    cjsRequire.resolve(packageName)
     return true
   } catch {
     // If that fails, we consider it not available
@@ -110,10 +121,10 @@ async function checkAndImportDevtools(): Promise<boolean> {
   if (isCommonJS()) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('@signaldb/devtools')
+      require(packageName)
       return true
     } catch (error) {
-      if (isNodeErrorWithCode(error) && error.code === 'MODULE_NOT_FOUND') {
+      if (isFailedDevToolsImportError(error as Error)) {
         return false
       }
       throw error
@@ -122,9 +133,7 @@ async function checkAndImportDevtools(): Promise<boolean> {
 
   // 2. Dynamic import in ESM
   try {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await import('@signaldb/devtools')
+    await import(/* @vite-ignore */ packageName)
     return true
   } catch (error) {
     // If we got here, try the createRequire fallback
@@ -138,7 +147,7 @@ async function checkAndImportDevtools(): Promise<boolean> {
     const modulePackage = await import('module')
     const createRequireFunction = modulePackage.default.createRequire
     const cjsRequire = createRequireFunction(import.meta.url)
-    cjsRequire('@signaldb/devtools')
+    cjsRequire(packageName)
     return true
   } catch (error) {
     if (isNodeErrorWithCode(error) && error.code === 'MODULE_NOT_FOUND') {

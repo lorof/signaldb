@@ -26,15 +26,15 @@
     "packages/base/*"
   ],
   "devDependencies": {
-    "@commitlint/cli": "19.6.1",
-    "@commitlint/config-conventional": "19.6.0",
+    "@commitlint/cli": "19.7.1",
+    "@commitlint/config-conventional": "19.7.1",
     "@rollup/plugin-typescript": "12.1.2",
-    "@stylistic/eslint-plugin": "^2.13.0",
-    "@typescript-eslint/eslint-plugin": "8.21.0",
-    "@typescript-eslint/parser": "8.21.0",
-    "@vitest/coverage-istanbul": "3.0.3",
+    "@stylistic/eslint-plugin": "^3.0.0",
+    "@typescript-eslint/eslint-plugin": "8.24.0",
+    "@typescript-eslint/parser": "8.24.0",
+    "@vitest/coverage-istanbul": "3.0.5",
     "@vitest/eslint-plugin": "^1.1.25",
-    "eslint": "9.18.0",
+    "eslint": "9.20.1",
     "eslint-import-resolver-typescript": "3.7.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsdoc": "^50.6.1",
@@ -44,7 +44,7 @@
     "eslint-plugin-tsdoc": "^0.4.0",
     "eslint-plugin-unicorn": "^56.0.1",
     "fast-glob": "^3.3.3",
-    "happy-dom": "16.7.2",
+    "happy-dom": "17.1.0",
     "husky": "9.1.7",
     "mermaid": "^11.4.1",
     "rimraf": "6.0.1",
@@ -54,11 +54,11 @@
     "typedoc": "^0.27.6",
     "typescript": "5.7.3",
     "typescript-eslint": "^8.20.0",
-    "vite": "6.0.11",
+    "vite": "6.1.0",
     "vite-plugin-dts": "4.5.0",
     "vite-tsconfig-paths": "5.1.4",
-    "vitepress": "1.6.1",
+    "vitepress": "1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "vitest": "3.0.3"
+    "vitest": "3.0.5"
   }
 }

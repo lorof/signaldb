@@ -39,7 +39,7 @@ The `create` function creates a new reactive dependency. A `Dependency` object m
 * `depend()`: This method is called when the collection data is read, marking the place in the code as dependent on the collection data. Subsequent changes to the collection data will cause this place to be re-evaluated.
 * `notify()`: This method is called when the collection data changes, notifying all dependent parts of the code that they need to re-evaluate.
 
-You can also include more methods or other data in the dependency which you can access from the [`onDispose`](#ondispose-callback-void-dependency-dependency) method.
+You can also include more methods or other data in the dependency which you can access from the [`onDispose`](#ondispose-callback-void-dependency-dependency-optional) method.
 
 ```js
 create: () => {
@@ -70,7 +70,7 @@ isInScope() {
 ### `onDispose(callback: () -> void, dependency: Dependency)` (optional)
 
 This method is used to register a callback to be executed when the reactive computation is disposed. The dependency created in the [`create`](#create-dependency) method, will be passed as the second parameter. This can be useful if a framework requires data from the creation on disposal.
-The `onDispose` function is optional, but it's highly recommended to implement it whenever it's possible. Without `onDispose`, SignalDB will not be able to clean up resources automatically when they are no longer needed. That means, that you have to call the [`cursor.cleanup()`](/queries/#cleanup) method manually at the end of the computation. Normally there is some way to cleanup things after the computation runs, but it's possible that you cannot implement it in this `onDispose` method (like in the [Angular adapter](/reference/angular/) for example).
+The `onDispose` function is optional, but it's highly recommended to implement it whenever it's possible. Without `onDispose`, SignalDB will not be able to clean up resources automatically when they are no longer needed. That means, that you have to call the [`cursor.cleanup()`](/reference/core/cursor/#cleanup) method manually at the end of the computation. Normally there is some way to cleanup things after the computation runs, but it's possible that you cannot implement it in this `onDispose` method (like in the [Angular adapter](/reference/angular/) for example).
 
 ```js
 onDispose: (callback, dependency) => {
