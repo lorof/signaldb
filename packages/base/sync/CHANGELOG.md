@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-03-10
+
+### Added
+
+* Allow configuration of debounce time for pushing changes (thanks @augustpemberton!)
+
+### Fixed
+
+* Don't skip debounces when pushing multiple collections (#1470, thanks @augustpemberton!)
+
+## [1.1.3] - 2025-02-19
+
+### Changed
+
+* Improved sync performance by reducing overhead in internal `applyChanges` method
+* Improved sync performance by updating only changed documents when applying snapshots
+
+## [1.1.2] - 2025-02-18
+
+### Changed
+
+* Add indices to internal collections to improve performance
+
 ## [1.1.1] - 2025-01-21
 
 ### Fixed

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.4] - 2025-02-18
+
+### Added
+
+* Added logic to load developer tools to this package. To load the developer tools, you now need to import `@signaldb/devtools` somewhere in your frontend code. Make sure that it doesn't get imported when running your code in production mode.
+
 ## [1.0.0-beta.3] - 2025-01-23
 
 ### Changed

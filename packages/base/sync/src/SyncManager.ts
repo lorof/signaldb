@@ -6,7 +6,7 @@ import type {
   LoadResponse,
   Selector,
 } from '@signaldb/core'
-import { Collection, randomId, isEqual } from '@signaldb/core'
+import { Collection, randomId, isEqual, createIndex } from '@signaldb/core'
 import debounce from './utils/debounce'
 import PromiseQueue from './utils/PromiseQueue'
 import sync from './sync'
@@ -50,6 +50,7 @@ interface Options<
   onError?: (collectionOptions: SyncOptions<CollectionOptions>, error: Error) => void,
 
   autostart?: boolean,
+  debounceTime?: number,
 }
 
 /**
@@ -95,12 +96,14 @@ export default class SyncManager<
   protected changes: Collection<Change<ItemType>, string>
   protected snapshots: Collection<Snapshot<ItemType>, string>
   protected syncOperations: Collection<SyncOperation, string>
+  protected scheduledPushes: Set<string> = new Set()
   protected remoteChanges: Omit<Change, 'id' | 'time'>[] = []
   protected syncQueues: Map<string, PromiseQueue> = new Map()
   protected persistenceReady: Promise<void>
   protected isDisposed = false
   protected instanceId = randomId()
   protected id: string
+  protected debouncedFlush: () => void
 
   /**
    * @param options Collection options
@@ -111,6 +114,8 @@ export default class SyncManager<
    * @param [options.persistenceAdapter] Persistence adapter to use for storing changes, snapshots and sync operations.
    * @param [options.reactivity] Reactivity adapter to use for reactivity.
    * @param [options.onError] Function to handle errors that occur async during syncing.
+   * @param [options.autostart] Whether to automatically start syncing new collections.
+   * @param [options.debounceTime] The time in milliseconds to debounce push operations.
    */
   constructor(options: Options<CollectionOptions, ItemType, IdType>) {
     this.options = {
@@ -127,16 +132,19 @@ export default class SyncManager<
     this.changes = new Collection({
       name: `${this.options.id}-changes`,
       persistence: changesPersistence?.adapter,
+      indices: [createIndex('collectionName')],
       reactivity,
     })
     this.snapshots = new Collection({
       name: `${this.options.id}-snapshots`,
       persistence: snapshotsPersistence?.adapter,
+      indices: [createIndex('collectionName')],
       reactivity,
     })
     this.syncOperations = new Collection({
       name: `${this.options.id}-sync-operations`,
       persistence: syncOperationsPersistence?.adapter,
+      indices: [createIndex('collectionName'), createIndex('status')],
       reactivity,
     })
     this.changes.on('persistence.error', error => changesPersistence?.handler(error))
@@ -152,6 +160,8 @@ export default class SyncManager<
     this.changes.setMaxListeners(1000)
     this.snapshots.setMaxListeners(1000)
     this.syncOperations.setMaxListeners(1000)
+
+    this.debouncedFlush = debounce(this.flushScheduledPushes, this.options.debounceTime ?? 100)
   }
 
   protected createPersistenceAdapter(name: string) {
@@ -308,12 +318,16 @@ export default class SyncManager<
     }
   }
 
-  protected deboucedPush = debounce((name: string) => {
-    this.pushChanges(name).catch(() => { /* error handler is called in sync */ })
-  }, 100)
+  protected flushScheduledPushes() {
+    this.scheduledPushes.forEach((name) => {
+      this.pushChanges(name).catch(() => { /* error handler is called in sync */ })
+    })
+    this.scheduledPushes.clear()
+  }
 
   protected schedulePush(name: string) {
-    this.deboucedPush(name)
+    this.scheduledPushes.add(name)
+    this.debouncedFlush()
   }
 
   /**
@@ -485,9 +499,7 @@ export default class SyncManager<
       if (options?.onlyWithChanges) {
         const currentChanges = this.changes.find({
           collectionName: name,
-          $and: [
-            { time: { $lte: syncTime } },
-          ],
+          time: { $lte: syncTime },
         }, {
           sort: { time: 1 },
           reactive: false,
@@ -573,9 +585,7 @@ export default class SyncManager<
     })
     const currentChanges = this.changes.find({
       collectionName: name,
-      $and: [
-        { time: { $lte: syncTime } },
-      ],
+      time: { $lte: syncTime },
     }, {
       sort: { time: 1 },
       reactive: false,
@@ -705,19 +715,22 @@ export default class SyncManager<
         collection.batch(() => {
           // update all items that are in the snapshot
           snapshot.forEach((item) => {
-            const itemExists = !!collection.findOne({
+            const currentItem = collection.findOne({
               id: item.id,
             } as Selector<any>, {
               reactive: false,
             })
             /* istanbul ignore else -- @preserve */
-            if (itemExists) {
-              this.remoteChanges.push({
-                collectionName: name,
-                type: 'update',
-                data: { id: item.id, modifier: { $set: item } },
-              })
-              collection.updateOne({ id: item.id } as Selector<any>, { $set: item })
+            if (currentItem) {
+              /* istanbul ignore if -- @preserve */
+              if (!isEqual(currentItem, item)) { // this case should never happen
+                this.remoteChanges.push({
+                  collectionName: name,
+                  type: 'update',
+                  data: { id: item.id, modifier: { $set: item } },
+                })
+                collection.updateOne({ id: item.id } as Selector<any>, { $set: item })
+              }
             } else { // this case should never happen
               this.remoteChanges.push({
                 collectionName: name,

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2025-02-19
+
+### Changed
+
+* Improved index query performance
+
+## [1.3.0] - 2025-02-18
+
+### Added
+
+* Implement exclusion of specific items when querying indices (when a selector contains `$nin` or `$ne`)
+
+### Fixed
+
+* Emit `getItems` event on collections regardless of an index hit
+
+### Removed
+
+* Removed auto-loading of developer tools and moved the loading to the `@signaldb/devtools` package. To load the developer tools, you now need to import `@signaldb/devtools` somewhere in your frontend code. Make sure that it doesn't get imported when running your code in production mode.
+
+## [1.2.4] - 2025-02-17
+
+### Changed
+
+* Improved type checking of selectors
+
 ## [1.2.3] - 2025-02-11
 
 ### Changed
